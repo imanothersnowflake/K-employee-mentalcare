@@ -73,7 +73,7 @@
     async function load() {
       const el = document.getElementById('sentence');
       try {
-        const res = await fetch('http://localhost:3000/api/generate', {
+        const res = await fetch('/api/generate', {
           signal: AbortSignal.timeout(15000)
         });
         const data = await res.json();
