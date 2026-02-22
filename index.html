@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오늘의 운세</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #f5f0e8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      font-family: 'Nanum Pen Script', cursive;
+    }
+
+    #label {
+      font-size: 1rem;
+      color: #aaa;
+      margin-bottom: 2rem;
+      letter-spacing: 0.05em;
+    }
+
+    #sentence {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      line-height: 1.9;
+      max-width: 580px;
+      text-align: center;
+      color: #222;
+      word-break: keep-all;
+    }
+
+    #sentence.loading {
+      color: #bbb;
+      font-size: 1.4rem;
+    }
+
+    #share {
+      margin-top: 3rem;
+      font-family: 'Nanum Pen Script', cursive;
+      font-size: 1rem;
+      color: #aaa;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+    #share:hover { color: #555; }
+  </style>
+</head>
+<body>
+
+  <p id="label">오늘의 운세</p>
+  <p id="sentence" class="loading">점 보는 중...</p>
+  <button id="share" onclick="share()">공유하기</button>
+
+  <script>
+    const FALLBACK = [
+      "니 통장잔고 열어봐. 그게 오늘 출근 이유야.",
+      "출근 전부터 퇴근 생각했지ㅋ 그게 벌써 몇 년째야.",
+      "퇴근 5분 전에 업무 연락온다 기대해.",
+      "오늘만 버티면 된다고 했는데, 어제도 그 말 했어.",
+      "하기 싫다고 안 하면 좋겠는데, 니가 안 하면 결국 니가 해야 함ㅋ",
+      "점심 뭐 먹지 고민하는게 오늘 할 가장 진지한 고민일걸?",
+    ];
+
+    async function load() {
+      const el = document.getElementById('sentence');
+      try {
+        const res = await fetch('http://localhost:3000/api/generate', {
+          signal: AbortSignal.timeout(15000)
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        el.classList.remove('loading');
+        el.textContent = data.sentence;
+      } catch {
+        el.classList.remove('loading');
+        el.textContent = FALLBACK[Math.floor(Math.random() * FALLBACK.length)];
+      }
+    }
+
+    async function share() {
+      const text = document.getElementById('sentence').textContent;
+      if (navigator.share) {
+        await navigator.share({ text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        document.getElementById('share').textContent = '복사됨 ✓';
+        setTimeout(() => document.getElementById('share').textContent = '공유하기', 2000);
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
